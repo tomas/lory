@@ -332,6 +332,10 @@ export function lory (slider, opts) {
             }, 0);
         }
 
+        // add margin between slides to total slides width, if given
+        var marginWidth = (options.slideMargin || 0) * slides.length;
+        slidesWidth += marginWidth;
+        
         if (rewindOnResize) {
             index = initialIndex;
         } else {
@@ -339,6 +343,10 @@ export function lory (slider, opts) {
             rewindSpeed = 0;
         }
 
+        // just call slide() so me make sure to have the same behaviour
+        slide(index);
+
+/*
         if (infinite) {
             translate(slides[index + infinite].offsetLeft * -1, 0, null);
 
@@ -352,6 +360,8 @@ export function lory (slider, opts) {
         if (classNameActiveSlide) {
             setActiveElement(slice.call(slides), index);
         }
+/*
+
     }
 
     /**
@@ -510,8 +520,7 @@ export function lory (slider, opts) {
          *
          * @isValidSlide {Boolean}
          */
-        const isValid = Number(duration) < 300 &&
-            Math.abs(delta.x) > 25 ||
+        const isValid = Math.abs(delta.x) > 25 ||
             Math.abs(delta.x) > frameWidth / 3;
 
         /**
@@ -528,9 +537,14 @@ export function lory (slider, opts) {
 
         const direction = delta.x < 0;
 
+        const movedSlides = Math.round(delta.x / (slidesWidth / slides.length));
+        
         if (!isScrolling) {
             if (isValid && !isOutOfBounds) {
-                slide(false, direction);
+                if (Math.abs(movedSlides) == 1)
+                  slide(false, direction);
+                else
+                  slide(index - movedSlides, direction);
             } else {
                 translate(position.x, options.snapBackSpeed);
             }
