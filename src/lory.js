@@ -246,6 +246,21 @@ export function lory (slider, opts) {
         });
     }
 
+    function onImagesLoaded(images, cb) {
+      var count = images.length;
+
+      function done() {
+        --count || cb();
+      }
+
+      [].forEach.call(images, function(img) {
+        if(img.complete)
+          done();
+        else
+          img.addEventListener('load', done, false);
+      });
+    }
+    
     /**
      * public
      * setup function
@@ -293,27 +308,30 @@ export function lory (slider, opts) {
             }
         }
 
-        reset();
+        var images = slideContainer.getElementsByTagName('IMG');
+        onImagesLoaded(images, function() {
+            reset();
 
-        if (classNameActiveSlide) {
-            setActiveElement(slides, index);
-        }
+            if (classNameActiveSlide) {
+                setActiveElement(slides, index);
+            }
 
-        if (prevCtrl && nextCtrl) {
-            prevCtrl.addEventListener('click', prev);
-            nextCtrl.addEventListener('click', next);
-        }
+            if (prevCtrl && nextCtrl) {
+                prevCtrl.addEventListener('click', prev);
+                nextCtrl.addEventListener('click', next);
+            }
 
-        frame.addEventListener('touchstart', onTouchstart, touchEventParams);
+            frame.addEventListener('touchstart', onTouchstart, touchEventParams);
 
-        if (enableMouseEvents) {
-            frame.addEventListener('mousedown', onTouchstart);
-            frame.addEventListener('click', onClick);
-        }
+            if (enableMouseEvents) {
+                frame.addEventListener('mousedown', onTouchstart);
+                frame.addEventListener('click', onClick);
+            }
 
-        options.window.addEventListener('resize', onResize);
+            options.window.addEventListener('resize', onResize);
 
-        dispatchSliderEvent('after', 'init');
+            dispatchSliderEvent('after', 'init');
+        });
     }
 
     /**
