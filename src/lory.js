@@ -360,7 +360,7 @@ export function lory (slider, opts) {
         if (classNameActiveSlide) {
             setActiveElement(slice.call(slides), index);
         }
-/*
+*/
 
     }
 
