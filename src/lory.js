@@ -9,7 +9,7 @@ const slice = Array.prototype.slice;
 
 export function lory (slider, opts) {
     let position;
-    let slidesWidth;
+    let slideWidth;
     let frameWidth;
     let slides;
     let resetting;
@@ -113,12 +113,22 @@ export function lory (slider, opts) {
         }
     }
 
+    function getPixelValue(style, prop) {
+      return parseInt((style[prop] || '0').replace('px', ''));
+    }
+
     /**
      * returns an element's width
      */
-    function elementWidth (element) {
-        return element.getBoundingClientRect().width || element.offsetWidth;
+    function elementWidth(element, withMargin) {
+        var w = element.getBoundingClientRect().width || element.offsetWidth;
+        if (withMargin) {
+          var style = element.currentStyle || window.getComputedStyle(element);
+          w += getPixelValue(style, 'marginLeft') + getPixelValue(style, 'marginRight');
+        }
+        return w;
     }
+
 
     /**
      * slidefunction called by prev, next & touchend
@@ -142,10 +152,9 @@ export function lory (slider, opts) {
             classNameDisabledPrevCtrl = 'disabled'
         } = options;
 
-        let duration = slideSpeed;
-
-        const nextSlide = direction ? index + 1 : index - 1;
-        const maxOffset = Math.round(slidesWidth - frameWidth);
+        var duration = slideSpeed;
+        var nextSlide = direction ? index + 1 : index - 1;
+        var perPage = Math.floor(frameWidth / slideWidth);
 
         dispatchSliderEvent('before', 'slide', {
             index,
@@ -178,7 +187,7 @@ export function lory (slider, opts) {
             }
         }
 
-        nextIndex = Math.min(Math.max(nextIndex, 0), slides.length - 1);
+        nextIndex = Math.min(Math.max(nextIndex, 0), slides.length - perPage);
 
         if (infinite && direction === undefined) {
             nextIndex += infinite;
@@ -189,8 +198,11 @@ export function lory (slider, opts) {
             duration = rewindSpeed;
         }
 
-        let nextOffset = Math.min(Math.max(slides[nextIndex].offsetLeft * -1, maxOffset * -1), 0);
+        if (!slides[nextIndex])
+          return console.warn('Slide not found', nextIndex)
 
+        // let nextOffset = Math.min(Math.max(slides[nextIndex].offsetLeft * -1, maxOffset * -1), 0);
+        let nextOffset = slides[nextIndex].offsetLeft * -1;
         if (rewind && Math.abs(position.x) === maxOffset && direction) {
             nextOffset = 0;
             nextIndex = 0;
@@ -211,7 +223,9 @@ export function lory (slider, opts) {
          * update the index with the nextIndex only if
          * the offset of the nextIndex is in the range of the maxOffset
          */
-        if (slides[nextIndex].offsetLeft <= maxOffset) {
+        // if (slides[nextIndex].offsetLeft <= maxOffset) {
+        // if (!direction || slides[nextIndex].offsetLeft <= maxOffset) {
+        if (!direction || nextIndex <= slides.length) {
           setIndex(nextIndex);
         }
 
@@ -244,7 +258,7 @@ export function lory (slider, opts) {
             prevCtrl.classList.add(classNameDisabledPrevCtrl);
         }
 
-        if (nextCtrl && !infinite && !rewind && ((nextIndex + 1) === slides.length)) {
+        if (nextCtrl && !infinite && !rewind && nextIndex + 1 === slides.length) {
             nextCtrl.classList.add(classNameDisabledNextCtrl);
         }
 
@@ -353,19 +367,24 @@ export function lory (slider, opts) {
 
         var {infinite, ease, rewindSpeed, rewindOnResize, classNameActiveSlide, initialIndex} = options;
 
-        slidesWidth = elementWidth(slideContainer);
         frameWidth = elementWidth(frame);
 
-        if (frameWidth === slidesWidth) {
-            slidesWidth = slides.reduce(function (previousValue, slide) {
-                return previousValue + elementWidth(slide);
-            }, 0);
+        if (options.slideWidth) {
+          slideWidth = options.slideWidth;
+        } else {
+          var checkSlide = slides[index] || slides[0],
+              checkWidth = elementWidth(checkSlide, true);
+
+          // TODO: get slide position, but only if within bounds
+          // if (position.x <= checkSlide.offsetLeft) {
+          //   console.log(index, position, checkSlide.offsetLeft, checkSlide);
+          // } else {
+          //   console.log('out of bounds');
+          // }
+
+          if (checkWidth > 0) slideWidth = checkWidth;
         }
 
-        // add margin between slides to total slides width, if given
-        var marginWidth = (options.slideMargin || 0) * slides.length;
-        slidesWidth += marginWidth;
-        
         if (rewindOnResize) {
             setIndex(initialIndex);
         } else {
@@ -553,8 +572,8 @@ export function lory (slider, opts) {
          *
          * @isValidSlide {Boolean}
          */
-        const isValid = Math.abs(delta.x) > 25 ||
-            Math.abs(delta.x) > frameWidth / 3;
+        // const isValid = Math.abs(delta.x) > 25 || Math.abs(delta.x) > frameWidth / 3;
+        const isValid = !!delta.x;
 
         /**
          * is out of bounds if:
@@ -565,13 +584,15 @@ export function lory (slider, opts) {
          *
          * @isOutOfBounds {Boolean}
          */
-        const isOutOfBounds = !index && delta.x > 0 ||
-            index === slides.length - 1 && delta.x < 0;
+        // const isOutOfBounds = !index && delta.x > 0 || index === slides.length - 1 && delta.x < 0;
+        const isOutOfBounds = index === slides.length - 1 && delta.x < 0;
 
         const direction = delta.x < 0;
 
-        const movedSlides = Math.round(delta.x / (slidesWidth / slides.length));
-        
+        var movedSlides = !delta.x ? 0 : (delta.x / slideWidth);
+        movedSlides += direction ? -1 : 1;
+        movedSlides |= 0;
+
         if (!isScrolling) {
             if (isValid && !isOutOfBounds) {
                 if (Math.abs(movedSlides) == 1)
