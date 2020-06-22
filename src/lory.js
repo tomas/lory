@@ -35,6 +35,11 @@ export function lory (slider, opts) {
         slider = slider[0];
     }
 
+    function setIndex(num) {
+      // console.log('setting index from', index, num);
+      index = num;
+    }
+
     /**
      * private
      * set active class to element which is the current slide
@@ -206,17 +211,17 @@ export function lory (slider, opts) {
          * the offset of the nextIndex is in the range of the maxOffset
          */
         if (slides[nextIndex].offsetLeft <= maxOffset) {
-            index = nextIndex;
+          setIndex(nextIndex);
         }
 
         if (infinite && (nextIndex === slides.length - infinite ||
             nextIndex === slides.length - slides.length % infinite || nextIndex === 0)) {
             if (direction) {
-                index = infinite;
+                setIndex(infinite);
             }
 
             if (!direction) {
-                index = slides.length - (infinite * 2);
+                setIndex(slides.length - (infinite * 2));
             }
 
             position.x = slides[index].offsetLeft * -1;
@@ -284,7 +289,7 @@ export function lory (slider, opts) {
             initialIndex
         } = options;
 
-        index = initialIndex;
+        setIndex(initialIndex);
         frame = slider.getElementsByClassName(classNameFrame)[0];
         slideContainer = frame.getElementsByClassName(classNameSlideContainer)[0];
         prevCtrl = slider.getElementsByClassName(classNamePrevCtrl)[0];
