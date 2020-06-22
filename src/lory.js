@@ -12,6 +12,7 @@ export function lory (slider, opts) {
     let slidesWidth;
     let frameWidth;
     let slides;
+    let resetting;
 
     /**
      * slider DOM elements
@@ -339,6 +340,9 @@ export function lory (slider, opts) {
      * reset function: called on resize
      */
     function reset () {
+        if (resetting) return; // console.log('resetting');
+        resetting = true;
+
         var {infinite, ease, rewindSpeed, rewindOnResize, classNameActiveSlide, initialIndex} = options;
 
         slidesWidth = elementWidth(slideContainer);
@@ -363,6 +367,9 @@ export function lory (slider, opts) {
 
         // just call slide() so me make sure to have the same behaviour
         slide(index);
+        setTimeout(function() {
+          resetting = false;
+        }, 100);
 
 /*
         if (infinite) {
