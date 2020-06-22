@@ -227,26 +227,38 @@ var JumpSlider = (function() {
     rewindOnResize: true
   }
 
+  var _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+    return target;
+  };
+
   return function JumpSlider(slider, opts) {
-      let position;
-      let slideWidth;
-      let frameWidth;
-      let slides;
-      let resetting;
+      var position;
+      var slideWidth;
+      var frameWidth;
+      var slides;
+      var resetting;
 
       /**
        * slider DOM elements
        */
-      let frame;
-      let slideContainer;
-      let prevCtrl;
-      let nextCtrl;
-      let prefixes;
-      let transitionEndCallback;
+      var frame;
+      var slideContainer;
+      var prevCtrl;
+      var nextCtrl;
+      var prefixes;
+      var transitionEndCallback;
 
-      let index   = 0;
-      let options = {};
-      let touchEventParams = supportsPassive() ? { passive: true } : false;
+      var index   = 0;
+      var options = _extend(defaults, opts);
+      var touchEventParams = supportsPassive() ? { passive: true } : false;
 
       /**
        * if object is jQuery convert to native DOM element
@@ -265,15 +277,15 @@ var JumpSlider = (function() {
        * set active class to element which is the current slide
        */
       function setActiveElement (slides, currentIndex) {
-          const {classNameActiveSlide} = options;
+          var className = options.classNameActiveSlide;
 
-          slides.forEach((element, index) => {
-              if (element.classList.contains(classNameActiveSlide)) {
-                  element.classList.remove(classNameActiveSlide);
-              }
+          slides.forEach(function(element, index) {
+              // if (element.classList.contains(className)) {
+                  element.classList.remove(className);
+              // }
           });
 
-          slides[currentIndex].classList.add(classNameActiveSlide);
+          slides[currentIndex].classList.add(className);
       }
 
       /**
@@ -284,26 +296,21 @@ var JumpSlider = (function() {
        * @return {array} array of updated slideContainer elements
        */
       function setupInfinite (slideArray) {
-          const {infinite} = options;
+          var infinite = options.infinite;
+          var front = slideArray.slice(0, infinite);
+          var back  = slideArray.slice(slideArray.length - infinite, slideArray.length);
 
-          const front = slideArray.slice(0, infinite);
-          const back  = slideArray.slice(slideArray.length - infinite, slideArray.length);
-
-          front.forEach(function (element) {
-              const cloned = element.cloneNode(true);
-
+          front.forEach(function(element) {
+              var cloned = element.cloneNode(true);
               slideContainer.appendChild(cloned);
           });
 
-          back.reverse()
-              .forEach(function (element) {
-                  const cloned = element.cloneNode(true);
-
-                  slideContainer.insertBefore(cloned, slideContainer.firstChild);
-              });
+          back.reverse().forEach(function (element) {
+              var cloned = element.cloneNode(true);
+              slideContainer.insertBefore(cloned, slideContainer.firstChild);
+          });
 
           slideContainer.addEventListener(prefixes.transitionEnd, onTransitionEnd);
-
           return slice.call(slideContainer.children);
       }
 
@@ -323,7 +330,7 @@ var JumpSlider = (function() {
        * @ease      {string} easing css property
        */
       function translate (to, duration, ease) {
-          const style = slideContainer && slideContainer.style;
+          var style = slideContainer && slideContainer.style;
 
           if (style) {
               style[prefixes.transition + 'TimingFunction'] = ease;
@@ -359,36 +366,26 @@ var JumpSlider = (function() {
        * @direction  {boolean}
        */
       function slide (nextIndex, direction) {
-          const {
-              slideSpeed,
-              slidesToScroll,
-              infinite,
-              rewind,
-              rewindPrev,
-              rewindSpeed,
-              ease,
-              classNameActiveSlide,
-              classNameDisabledNextCtrl = 'disabled',
-              classNameDisabledPrevCtrl = 'disabled'
-          } = options;
+          var infinite = options.infinite;
+          var duration = options.slideSpeed;
+          var disabledClassName = options.classNameDisabled || 'disabled';
 
-          var duration = slideSpeed;
           var nextSlide = direction ? index + 1 : index - 1;
           var perPage = Math.floor(frameWidth / slideWidth);
 
           dispatchSliderEvent('before', 'slide', {
-              index,
-              nextSlide
+              index: index,
+              nextSlide: nextSlide
           });
 
           /**
            * Reset control classes
            */
           if (prevCtrl) {
-              prevCtrl.classList.remove(classNameDisabledPrevCtrl);
+              prevCtrl.classList.remove(disabledClassName);
           }
           if (nextCtrl) {
-              nextCtrl.classList.remove(classNameDisabledNextCtrl);
+              nextCtrl.classList.remove(disabledClassName);
           }
 
           if (typeof nextIndex !== 'number') {
@@ -396,13 +393,13 @@ var JumpSlider = (function() {
                 if (infinite && index + (infinite * 2) !== slides.length) {
                     nextIndex = index + (infinite - index % infinite);
                 } else {
-                    nextIndex = index + slidesToScroll;
+                    nextIndex = index + options.slidesToScroll;
                 }
               } else {
                 if (infinite && index % infinite !== 0) {
                     nextIndex = index - index % infinite;
                 } else {
-                    nextIndex = index - slidesToScroll;
+                    nextIndex = index - options.slidesToScroll;
                 }
               }
           }
@@ -413,27 +410,27 @@ var JumpSlider = (function() {
               nextIndex += infinite;
           }
 
-          if (rewindPrev && Math.abs(position.x) === 0 && direction === false) {
+          if (options.rewindPrev && Math.abs(position.x) === 0 && direction === false) {
               nextIndex = slides.length - 1;
-              duration = rewindSpeed;
+              duration = options.rewindSpeed;
           }
 
           if (!slides[nextIndex])
             return console.warn('Slide not found', nextIndex)
 
-          // let nextOffset = Math.min(Math.max(slides[nextIndex].offsetLeft * -1, maxOffset * -1), 0);
-          let nextOffset = slides[nextIndex].offsetLeft * -1;
+          // var nextOffset = Math.min(Math.max(slides[nextIndex].offsetLeft * -1, maxOffset * -1), 0);
+          var nextOffset = slides[nextIndex].offsetLeft * -1;
 
-          if (rewind && Math.abs(position.x) === maxOffset && direction) {
+          if (options.rewind && Math.abs(position.x) === maxOffset && direction) {
               nextOffset = 0;
               nextIndex = 0;
-              duration = rewindSpeed;
+              duration = options.rewindSpeed;
           }
 
           /**
            * translate to the nextOffset by a defined duration and ease function
            */
-          translate(nextOffset, duration, ease);
+          translate(nextOffset, duration, options.ease);
 
           /**
            * update the position with the next position
@@ -462,12 +459,12 @@ var JumpSlider = (function() {
 
               position.x = slides[index].offsetLeft * -1;
 
-              transitionEndCallback = function () {
+              transitionEndCallback = function() {
                   translate(slides[index].offsetLeft * -1, 0, undefined);
               };
           }
 
-          if (classNameActiveSlide) {
+          if (options.classNameActiveSlide) {
               setActiveElement(slice.call(slides), index);
           }
 
@@ -475,12 +472,12 @@ var JumpSlider = (function() {
            * update classes for next and prev arrows
            * based on user settings
            */
-          if (prevCtrl && !infinite && !rewindPrev && nextIndex === 0) {
-              prevCtrl.classList.add(classNameDisabledPrevCtrl);
+          if (prevCtrl && !infinite && !options.rewindPrev && nextIndex === 0) {
+              prevCtrl.classList.add(disabledClassName);
           }
 
-          if (nextCtrl && !infinite && !rewind && nextIndex + 1 === slides.length) {
-              nextCtrl.classList.add(classNameDisabledNextCtrl);
+          if (nextCtrl && !infinite && !options.rewind && nextIndex + 1 === slides.length) {
+              nextCtrl.classList.add(disabledClassName);
           }
 
           dispatchSliderEvent('after', 'slide', {
@@ -513,25 +510,14 @@ var JumpSlider = (function() {
           dispatchSliderEvent('before', 'init');
 
           prefixes = detectPrefixes();
-          options = {...defaults, ...opts};
 
-          const {
-              classNameFrame,
-              classNameSlideContainer,
-              classNamePrevCtrl,
-              classNameNextCtrl,
-              classNameDisabledNextCtrl = 'disabled',
-              classNameDisabledPrevCtrl = 'disabled',
-              enableMouseEvents,
-              classNameActiveSlide,
-              initialIndex
-          } = options;
+          var disabledClassName = options.classNameDisabled || 'disabled';
 
-          setIndex(initialIndex);
-          frame = slider.getElementsByClassName(classNameFrame)[0];
-          slideContainer = frame.getElementsByClassName(classNameSlideContainer)[0];
-          prevCtrl = slider.getElementsByClassName(classNamePrevCtrl)[0];
-          nextCtrl = slider.getElementsByClassName(classNameNextCtrl)[0];
+          setIndex(options.initialIndex);
+          frame = slider.getElementsByClassName(options.classNameFrame)[0];
+          slideContainer = frame.getElementsByClassName(options.classNameSlideContainer)[0];
+          prevCtrl = slider.getElementsByClassName(options.classNamePrevCtrl)[0];
+          nextCtrl = slider.getElementsByClassName(options.classNameNextCtrl)[0];
 
           position = {
               x: slideContainer.offsetLeft,
@@ -544,11 +530,11 @@ var JumpSlider = (function() {
               slides = slice.call(slideContainer.children);
 
               if (prevCtrl && !options.rewindPrev) {
-                  prevCtrl.classList.add(classNameDisabledPrevCtrl);
+                  prevCtrl.classList.add(disabledClassName);
               }
 
               if (nextCtrl && slides.length === 1 && !options.rewind) {
-                  nextCtrl.classList.add(classNameDisabledNextCtrl);
+                  nextCtrl.classList.add(disabledClassName);
               }
           }
 
@@ -556,7 +542,7 @@ var JumpSlider = (function() {
           onImagesLoaded(images, function() {
               reset();
 
-              if (classNameActiveSlide) {
+              if (options.classNameActiveSlide) {
                   setActiveElement(slides, index);
               }
 
@@ -567,7 +553,7 @@ var JumpSlider = (function() {
 
               frame.addEventListener('touchstart', onTouchstart, touchEventParams);
 
-              if (enableMouseEvents) {
+              if (options.enableMouseEvents) {
                   frame.addEventListener('mousedown', onTouchstart);
                   frame.addEventListener('click', onClick);
               }
@@ -585,9 +571,6 @@ var JumpSlider = (function() {
       function reset () {
           if (resetting) return; // console.log('resetting');
           resetting = true;
-
-          var {infinite, ease, rewindSpeed, rewindOnResize, classNameActiveSlide, initialIndex} = options;
-
           frameWidth = elementWidth(frame);
 
           if (options.slideWidth) {
@@ -606,11 +589,11 @@ var JumpSlider = (function() {
             if (checkWidth > 0) slideWidth = checkWidth;
           }
 
-          if (rewindOnResize) {
-              setIndex(initialIndex);
-          } else {
-              ease = null;
-              rewindSpeed = 0;
+          if (options.rewindOnResize) {
+              setIndex(options.initialIndex);
+          // } else {
+          //     ease = null;
+          //     rewindSpeed = 0;
           }
 
           // just call slide() so me make sure to have the same behaviour
@@ -710,23 +693,21 @@ var JumpSlider = (function() {
 
       // event handling
 
-      let touchOffset;
-      let delta;
-      let isScrolling;
+      var touchOffset;
+      var delta;
+      var isScrolling;
 
       function onTransitionEnd () {
           if (transitionEndCallback) {
               transitionEndCallback();
-
               transitionEndCallback = undefined;
           }
       }
 
       function onTouchstart (event) {
-          const {enableMouseEvents} = options;
-          const touches = event.touches ? event.touches[0] : event;
+          var touches = event.touches ? event.touches[0] : event;
 
-          if (enableMouseEvents) {
+          if (options.enableMouseEvents) {
               frame.addEventListener('mousemove', onTouchmove);
               frame.addEventListener('mouseup', onTouchend);
               frame.addEventListener('mouseleave', onTouchend);
@@ -735,11 +716,9 @@ var JumpSlider = (function() {
           frame.addEventListener('touchmove', onTouchmove, touchEventParams);
           frame.addEventListener('touchend', onTouchend);
 
-          const {pageX, pageY} = touches;
-
           touchOffset = {
-              x: pageX,
-              y: pageY,
+              x: touches.pageX,
+              y: touches.pageY,
               time: Date.now()
           };
 
@@ -748,17 +727,16 @@ var JumpSlider = (function() {
           delta = {};
 
           dispatchSliderEvent('on', 'touchstart', {
-              event
+              event: event
           });
       }
 
       function onTouchmove (event) {
-          const touches = event.touches ? event.touches[0] : event;
-          const {pageX, pageY} = touches;
+          var touches = event.touches ? event.touches[0] : event;
 
           delta = {
-              x: pageX - touchOffset.x,
-              y: pageY - touchOffset.y
+              x: touches.pageX - touchOffset.x,
+              y: touches.pageY - touchOffset.y
           };
 
           if (typeof isScrolling === 'undefined') {
@@ -771,7 +749,7 @@ var JumpSlider = (function() {
 
           // may be
           dispatchSliderEvent('on', 'touchmove', {
-              event
+              event: event
           });
       }
 
@@ -780,7 +758,7 @@ var JumpSlider = (function() {
            * time between touchstart and touchend in milliseconds
            * @duration {number}
            */
-          const duration = touchOffset ? Date.now() - touchOffset.time : undefined;
+          var duration = touchOffset ? Date.now() - touchOffset.time : undefined;
 
           /**
            * is valid if:
@@ -794,7 +772,7 @@ var JumpSlider = (function() {
            * @isValidSlide {Boolean}
            */
           // const isValid = Math.abs(delta.x) > 25 || Math.abs(delta.x) > frameWidth / 3;
-          const isValid = !!delta.x;
+          var isValid = !!delta.x;
 
           /**
            * is out of bounds if:
@@ -806,9 +784,9 @@ var JumpSlider = (function() {
            * @isOutOfBounds {Boolean}
            */
           // const isOutOfBounds = !index && delta.x > 0 || index === slides.length - 1 && delta.x < 0;
-          const isOutOfBounds = index === slides.length - 1 && delta.x < 0;
+          var isOutOfBounds = index === slides.length - 1 && delta.x < 0;
 
-          const direction = delta.x < 0;
+          var direction = delta.x < 0;
 
           var movedSlides = !delta.x ? 0 : (delta.x / slideWidth);
           movedSlides += direction ? -1 : 1;
@@ -816,7 +794,7 @@ var JumpSlider = (function() {
 
           if (!isScrolling) {
               if (isValid && !isOutOfBounds) {
-                  if (Math.abs(movedSlides) == 1)
+                  if (movedSlides == 1 || movedSlides == -1)
                     slide(false, direction);
                   else
                     slide(index - movedSlides, direction);
@@ -837,7 +815,7 @@ var JumpSlider = (function() {
           frame.removeEventListener('mouseleave', onTouchend);
 
           dispatchSliderEvent('on', 'touchend', {
-              event
+              event: event
           });
       }
 
@@ -852,7 +830,7 @@ var JumpSlider = (function() {
               reset();
 
               dispatchSliderEvent('on', 'resize', {
-                  event
+                  event: event
               });
           }
       }
