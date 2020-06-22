@@ -256,15 +256,17 @@ export function lory (slider, opts) {
     function onImagesLoaded(images, cb) {
       var count = images.length;
 
-      function done() {
+      function done(ev) {
         --count || cb();
       }
 
       [].forEach.call(images, function(img) {
-        if(img.complete)
+        if (img.complete) {
           done();
-        else
+        } else {
+          img.addEventListener('error', done, false);
           img.addEventListener('load', done, false);
+        }
       });
     }
     
