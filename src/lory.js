@@ -108,7 +108,8 @@ export function lory (slider, opts) {
         if (style) {
             style[prefixes.transition + 'TimingFunction'] = ease;
             style[prefixes.transition + 'Duration'] = duration + 'ms';
-            style[prefixes.transform] = 'translateX(' + to + 'px)';
+            // style[prefixes.transform] = 'translateX(' + to + 'px)';
+            style[prefixes.transform] = 'translate3d(' + to + 'px, 0, 0)';
         }
     }
 
@@ -364,7 +365,7 @@ export function lory (slider, opts) {
         slidesWidth += marginWidth;
         
         if (rewindOnResize) {
-            index = initialIndex;
+            setIndex(initialIndex);
         } else {
             ease = null;
             rewindSpeed = 0;
