@@ -92,7 +92,7 @@ export function lory (slider, opts) {
      * @return {[type]} [description]
      */
     function dispatchSliderEvent (phase, type, detail) {
-        dispatchEvent(slider, `${phase}.lory.${type}`, detail);
+        dispatchEvent(slider,  phase + '.lory.' + type, detail);
     }
 
     /**
@@ -203,6 +203,7 @@ export function lory (slider, opts) {
 
         // let nextOffset = Math.min(Math.max(slides[nextIndex].offsetLeft * -1, maxOffset * -1), 0);
         let nextOffset = slides[nextIndex].offsetLeft * -1;
+
         if (rewind && Math.abs(position.x) === maxOffset && direction) {
             nextOffset = 0;
             nextIndex = 0;
@@ -283,7 +284,7 @@ export function lory (slider, opts) {
         }
       });
     }
-    
+
     /**
      * public
      * setup function
@@ -326,7 +327,7 @@ export function lory (slider, opts) {
                 prevCtrl.classList.add(classNameDisabledPrevCtrl);
             }
 
-            if (nextCtrl && (slides.length === 1) && !options.rewind) {
+            if (nextCtrl && slides.length === 1 && !options.rewind) {
                 nextCtrl.classList.add(classNameDisabledNextCtrl);
             }
         }
